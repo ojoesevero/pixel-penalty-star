@@ -16,26 +16,26 @@ export default function StoryEventModal({ event, onResolveEvent }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/90 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-lg bg-slate-900 border-2 border-amber-500/80 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.25)] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="w-full max-w-lg max-h-[95vh] bg-slate-900 border-2 border-amber-500/80 rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.25)] flex flex-col overflow-hidden my-auto">
         
         {/* Newspaper Style Header */}
-        <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-3 text-center border-b border-amber-400/40">
+        <div className="shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 py-1.5 px-3 text-center border-b border-amber-400/40">
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xs font-black uppercase tracking-widest text-slate-950 bg-amber-300 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-950 bg-amber-300 px-2 py-0.5 rounded-full">
               {event.tag}
             </span>
-            <h3 className="text-sm sm:text-base font-black tracking-wide text-white uppercase drop-shadow">
+            <h3 className="text-xs sm:text-sm font-black tracking-wide text-white uppercase drop-shadow">
               DILEMA DO VESTIÁRIO
             </h3>
           </div>
         </div>
 
         {/* Story Content */}
-        <div className="p-5 flex flex-col gap-4">
-          <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-            <h4 className="text-base font-black text-amber-300 mb-1.5">{event.title}</h4>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+        <div className="p-3 sm:p-4 flex flex-col gap-2.5 overflow-y-auto flex-1">
+          <div className="bg-slate-950/80 p-2.5 sm:p-3 rounded-lg border border-slate-800">
+            <h4 className="text-xs sm:text-sm font-black text-amber-300 mb-1">{event.title}</h4>
+            <p className="text-[11px] sm:text-xs text-slate-200 leading-relaxed font-medium">
               {event.description}
             </p>
           </div>
