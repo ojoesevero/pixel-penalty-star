@@ -41,6 +41,7 @@ export default function App() {
   const [totalAssists, setTotalAssists] = useState(0);
   const [titlesWon, setTitlesWon] = useState(0);
   const [activeStoryEvent, setActiveStoryEvent] = useState(null);
+  const [pendingPostCrisisAction, setPendingPostCrisisAction] = useState(null);
   const [transferOffers, setTransferOffers] = useState(null);
   const [highlightScore, setHighlightScore] = useState(null);
   const [hasSavedGame, setHasSavedGame] = useState(false);
@@ -210,6 +211,16 @@ export default function App() {
       const agedPlayer = { ...updatedPlayer, age: nextAge, energy: 100 };
       setPlayer(agedPlayer);
 
+      // Reseta contadores da temporada para o próximo ano
+      setSeasonIndex((s) => s + 1);
+      setGameInSeason(0);
+      setSeasonGoals(0);
+      setSeasonAssists(0);
+
+      // Sorteia evento narrativo de Vestiário & Crises pós-jogo 10
+      const crisisEvent = getRandomStoryEvent(agedPlayer.seenStoryEvents || []);
+      setActiveStoryEvent(crisisEvent);
+
       // Aposentadoria aos 36 anos
       if (nextAge >= 36) {
         const finalScore = updatedTotalGoals * 15 + newTitles * 80 + Math.floor(newBalance / 50000);
@@ -221,7 +232,9 @@ export default function App() {
           nationality: '🇧🇷',
         });
         setHighlightScore(finalScore);
-        setScreen('retirement');
+        setPendingPostCrisisAction('retirement');
+        setScreen('hub');
+        saveGame({ player: agedPlayer, gameInSeason: 0, seasonIndex: seasonIndex + 1 });
         return;
       }
 
@@ -234,20 +247,23 @@ export default function App() {
         'july'
       );
       setTransferOffers(julyOffers);
-
-      // Reseta contadores da temporada para o próximo ano
-      setSeasonIndex((s) => s + 1);
-      setGameInSeason(0);
-      setSeasonGoals(0);
-      setSeasonAssists(0);
-
-      setScreen('transfers');
-    } else {
-      setGameInSeason(nextGame);
+      setPendingPostCrisisAction('transfers');
       setScreen('hub');
+      saveGame({ player: agedPlayer, gameInSeason: 0, seasonIndex: seasonIndex + 1 });
+      return;
     }
 
-    saveGame();
+    setGameInSeason(nextGame);
+    setScreen('hub');
+
+    // ⚡ VESTIÁRIO & CRISES: Dispara automaticamente a cada 2 jogos (Rodadas 2, 4, 6, 8)
+    if (nextGame % 2 === 0) {
+      const crisisEvent = getRandomStoryEvent(updatedPlayer.seenStoryEvents || []);
+      setActiveStoryEvent(crisisEvent);
+      setPendingPostCrisisAction(null);
+    }
+
+    saveGame({ player: updatedPlayer, gameInSeason: nextGame });
   };
 
   // Accept a contract proposal
@@ -315,18 +331,31 @@ export default function App() {
   // Story event resolution
   const handleResolveStoryEvent = (chosenOption) => {
     const effects = chosenOption.effects || {};
+    const seen = Array.isArray(player.seenStoryEvents) ? [...player.seenStoryEvents] : [];
+    if (activeStoryEvent?.id && !seen.includes(activeStoryEvent.id)) {
+      seen.push(activeStoryEvent.id);
+    }
+
     const updatedPlayer = {
       ...player,
+      seenStoryEvents: seen,
       energy: Math.min(100, Math.max(10, (player.energy || 100) + (effects.energy || 0))),
       coachTrust: Math.min(100, Math.max(10, (player.coachTrust || 70) + (effects.coachTrust || 0))),
       fanLove: Math.min(100, Math.max(10, (player.fanLove || 65) + (effects.fanLove || 0))),
       mediaHype: Math.min(100, Math.max(10, (player.mediaHype || 40) + (effects.mediaHype || 0))),
+      composure: Math.min(100, Math.max(10, (player.composure || 50) + (effects.composure || 0))),
       bankBalance: Math.max(0, (player.bankBalance || 0) + (effects.money || 0)),
     };
 
     setPlayer(updatedPlayer);
     setActiveStoryEvent(null);
     saveGame({ player: updatedPlayer });
+
+    // Se havia uma tela pendente após a crise (ex: janela de julho ou aposentadoria), transiciona agora
+    if (pendingPostCrisisAction) {
+      setScreen(pendingPostCrisisAction);
+      setPendingPostCrisisAction(null);
+    }
   };
 
   const calculateFinalCareerScore = () => {
@@ -378,7 +407,7 @@ export default function App() {
           transferOffersAvailable={Boolean(transferOffers)}
           onStartMatch={() => setScreen('match')}
           onOpenStore={() => setScreen('store')}
-          onTriggerEvent={() => setActiveStoryEvent(getRandomStoryEvent())}
+          onTriggerEvent={() => setActiveStoryEvent(getRandomStoryEvent(player?.seenStoryEvents || []))}
           onOpenTransfers={() => {
             if (!transferOffers) {
               const windowType = gameInSeason < 5 ? 'january' : 'july';

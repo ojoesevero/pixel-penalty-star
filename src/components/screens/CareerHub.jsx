@@ -213,17 +213,21 @@ export default function CareerHub({
           </div>
         </button>
 
-        {/* Story Dilemma Event */}
-        <button
-          onClick={onTriggerEvent}
-          className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 transition flex items-center gap-2.5 text-left cursor-pointer active:scale-[0.99]"
-        >
+        {/* Vestiário Status (Auto-triggers every 2 games) */}
+        <div className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 flex items-center gap-2.5 text-left shadow-sm">
           <span className="text-lg p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30">🗞️</span>
           <div>
-            <h4 className="text-[11px] font-bold text-white uppercase">Vestiário & Crises</h4>
-            <p className="text-[10px] text-slate-400">Dilemas morais e imprensa</p>
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-[11px] font-bold text-amber-300 uppercase">Vestiário & Crises</h4>
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                {gameInSeason % 2 === 1 ? 'Próximo pós-jogo' : 'A cada 2 jogos'}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {gameInSeason % 2 === 1 ? '⚠️ Crise iminente no apito final!' : 'Dilemas e reuniões a cada 2 jogos'}
+            </p>
           </div>
-        </button>
+        </div>
 
         {/* Transfer Window */}
         <button

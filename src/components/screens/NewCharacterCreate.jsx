@@ -34,6 +34,8 @@ export default function NewCharacterCreate({ onStartCareer }) {
       bankBalance: 3500, // Primeiro pé de meia da base
       monthlySalary: 3000,
       lifestyleItems: [],
+      seenStoryEvents: [],
+      composure: 50,
       careerHistory: [
         {
           clubId: selectedClub.id,
