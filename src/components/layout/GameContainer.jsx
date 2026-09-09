@@ -3,25 +3,25 @@ import { formatCurrency } from '@/engine/rpgSystem';
 
 export default function GameContainer({ player, currentClub, onRankingClick, onResetGame, children }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start py-4 px-2 sm:px-4 font-sans selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-2 sm:px-3 font-sans selection:bg-amber-500 selection:text-black">
       {/* Background Subtle Gradient & Glow */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 -z-10" />
 
       {/* Main Console Container */}
-      <div className="w-full max-w-4xl bg-slate-900/90 border border-slate-800/80 rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
+      <div className="w-full max-w-4xl bg-slate-900/95 border border-slate-800/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
         
         {/* Top Professional Header */}
-        <header className="bg-slate-950/80 border-b border-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <header className="bg-slate-950/90 border-b border-slate-800/80 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
           {/* Brand / Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-base shadow-md shadow-amber-500/20">
               ⚽
             </div>
             <div>
-              <h1 className="text-sm sm:text-base font-black tracking-wider uppercase bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
+              <h1 className="text-xs sm:text-sm font-black tracking-wider uppercase bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
                 Rumo ao Estrelato
               </h1>
-              <span className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">
+              <span className="text-[9px] text-slate-400 font-semibold tracking-widest uppercase block -mt-0.5">
                 Football Career RPG • 16-Bit Edition
               </span>
             </div>
@@ -75,13 +75,13 @@ export default function GameContainer({ player, currentClub, onRankingClick, onR
         </header>
 
         {/* Content Viewport */}
-        <main className="flex-1 flex flex-col p-3 sm:p-5">
+        <main className="flex-1 flex flex-col p-2 sm:p-3.5 overflow-y-auto">
           {children}
         </main>
       </div>
 
       {/* Footer Info */}
-      <footer className="mt-4 text-xs text-slate-500 text-center font-medium">
+      <footer className="mt-1.5 text-[10px] text-slate-500 text-center font-medium">
         Desenvolvido com paixão pelo futebol brasileiro • Supabase Global Sync • Vercel Cloud
       </footer>
     </div>
