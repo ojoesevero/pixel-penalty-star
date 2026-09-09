@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '@/engine/rpgSystem';
+import ClubBadge from '@/components/common/ClubBadge';
 
 export default function GameContainer({
   player,
@@ -50,7 +51,7 @@ export default function GameContainer({
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-700/60 font-semibold shadow-inner"
                 style={{ backgroundColor: `${currentClub.colors?.primary || '#1e293b'}25` }}
               >
-                <span>{currentClub.badge}</span>
+                <ClubBadge club={currentClub} className="w-4 h-4" textClassName="text-sm" />
                 <span className="text-white font-bold">{currentClub.name}</span>
               </div>
 

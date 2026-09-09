@@ -20,7 +20,7 @@ import { generateTransferOffers } from '@/engine/transferMarket';
 import { getRandomStoryEvent } from '@/engine/storyEvents';
 
 const SAVE_KEY = 'rumo_ao_estrelato_career_save';
-const TOTAL_GAMES_PER_SEASON = 5;
+const TOTAL_GAMES_PER_SEASON = 10;
 
 export default function App() {
   const [screen, setScreen] = useState('menu');
@@ -154,10 +154,10 @@ export default function App() {
     const updatedTotalGoals = totalGoals + g;
     const updatedTotalAssists = totalAssists + a;
 
-    // Monthly match salary payout + goal bonuses
-    const matchPay = Math.round((player.monthlySalary || 5000) / 4);
-    const bonusPay = g * 1500 + a * 800;
-    const newBalance = (player.bankBalance || 0) + matchPay + bonusPay;
+    // Salário MENSAL integral (cada rodada = 1 mês no calendário) + bônus esportivo
+    const monthlySalary = player.monthlySalary || 3000;
+    const matchBonus = (won ? 2000 : 500) + g * 1500 + a * 800;
+    const newBalance = (player.bankBalance || 0) + monthlySalary + matchBonus;
 
     // Coach and fan morale changes
     const coachDelta = won ? 6 : g > 0 ? 3 : -4;
@@ -183,19 +183,34 @@ export default function App() {
 
     const nextGame = gameInSeason + 1;
 
-    // Check if season is finished
+    // ❄️ 1º MOMENTO: Janela de Janeiro na Rodada 5 (Meio de Temporada)
+    if (nextGame === 5) {
+      setGameInSeason(5);
+      const januaryOffers = generateTransferOffers(
+        currentClub,
+        updatedPlayer.stats,
+        updatedGoals,
+        updatedPlayer.monthlySalary,
+        'january'
+      );
+      setTransferOffers(januaryOffers);
+      setScreen('transfers');
+      saveGame({ player: updatedPlayer, gameInSeason: 5 });
+      return;
+    }
+
+    // ☀️ 2º MOMENTO: Janela de Julho na Rodada 10 (Fim da Temporada / Europa & Mundo)
     if (nextGame >= TOTAL_GAMES_PER_SEASON) {
-      // Season End!
-      const isChampion = updatedGoals >= 6;
+      const isChampion = updatedGoals >= 8;
       const newTitles = titlesWon + (isChampion ? 1 : 0);
       setTitlesWon(newTitles);
 
-      // Advance age (1 season = 2 years)
-      const nextAge = updatedPlayer.age + 2;
+      // Avança idade (1 temporada completa de 10 jogos = 1 ano de carreira)
+      const nextAge = updatedPlayer.age + 1;
       const agedPlayer = { ...updatedPlayer, age: nextAge, energy: 100 };
       setPlayer(agedPlayer);
 
-      // Check retirement at 36
+      // Aposentadoria aos 36 anos
       if (nextAge >= 36) {
         const finalScore = updatedTotalGoals * 15 + newTitles * 80 + Math.floor(newBalance / 50000);
         submitScore({
@@ -210,16 +225,17 @@ export default function App() {
         return;
       }
 
-      // Generate Transfer Window Offers! (The core immersion: China $800k vs Série A $75k)
-      const offers = generateTransferOffers(
+      // Janela de Julho (Europa, Arábia, Grandes da Série A)
+      const julyOffers = generateTransferOffers(
         currentClub,
         agedPlayer.stats,
         updatedGoals,
-        agedPlayer.monthlySalary
+        agedPlayer.monthlySalary,
+        'july'
       );
-      setTransferOffers(offers);
+      setTransferOffers(julyOffers);
 
-      // Reset season counters
+      // Reseta contadores da temporada para o próximo ano
       setSeasonIndex((s) => s + 1);
       setGameInSeason(0);
       setSeasonGoals(0);
@@ -264,6 +280,12 @@ export default function App() {
       player: updatedPlayer,
       currentClubId: offer.club.id,
     });
+  };
+
+  // Decline all transfer offers and continue in current club
+  const handleDeclineTransfer = () => {
+    setTransferOffers(null);
+    setScreen('hub');
   };
 
   // Lifestyle item purchase
@@ -359,7 +381,14 @@ export default function App() {
           onTriggerEvent={() => setActiveStoryEvent(getRandomStoryEvent())}
           onOpenTransfers={() => {
             if (!transferOffers) {
-              const offers = generateTransferOffers(currentClub, player.stats, seasonGoals, player.monthlySalary);
+              const windowType = gameInSeason < 5 ? 'january' : 'july';
+              const offers = generateTransferOffers(
+                currentClub,
+                player.stats,
+                seasonGoals,
+                player.monthlySalary,
+                windowType
+              );
               setTransferOffers(offers);
             }
             setScreen('transfers');
@@ -392,6 +421,7 @@ export default function App() {
           offers={transferOffers}
           player={player}
           onAcceptOffer={handleAcceptTransfer}
+          onDecline={handleDeclineTransfer}
         />
       )}
 

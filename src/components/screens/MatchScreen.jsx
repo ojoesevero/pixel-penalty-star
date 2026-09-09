@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateMatchDuels } from '@/engine/tsubasaMatch';
 import TsubasaDuelModal from '@/components/match/TsubasaDuelModal';
 import { sfxCrowd, sfxVictory, sfxWhistle } from '@/audio/sfx';
+import ClubBadge from '@/components/common/ClubBadge';
 
 export default function MatchScreen({
   player,
@@ -141,7 +142,7 @@ export default function MatchScreen({
         <div className="grid grid-cols-3 items-center text-center py-1">
           {/* Home Team */}
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-2xl">{currentClub.badge}</span>
+            <ClubBadge club={currentClub} className="w-8 h-8" textClassName="text-2xl" />
             <span className="text-xs sm:text-sm font-black text-white">{currentClub.name}</span>
             <span className="text-[9px] text-emerald-400 font-bold">MANDANTE</span>
           </div>
@@ -156,7 +157,7 @@ export default function MatchScreen({
 
           {/* Away Team */}
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-2xl">{opponentClub.badge}</span>
+            <ClubBadge club={opponentClub} className="w-8 h-8" textClassName="text-2xl" />
             <span className="text-xs sm:text-sm font-black text-white">{opponentClub.name}</span>
             <span className="text-[9px] text-slate-400 font-bold">VISITANTE</span>
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { POSITIONS } from '@/engine/rpgSystem';
 import { getStartingClubs } from '@/engine/clubsData';
 import { sfxWhistle } from '@/audio/sfx';
+import ClubBadge from '@/components/common/ClubBadge';
 
 export default function NewCharacterCreate({ onStartCareer }) {
   const startingClubs = getStartingClubs();
@@ -163,17 +164,17 @@ export default function NewCharacterCreate({ onStartCareer }) {
                     type="button"
                     key={club.id}
                     onClick={() => setSelectedClub(club)}
-                    className={`p-2 rounded-lg border text-center flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
+                    className={`p-1.5 sm:p-2 rounded-lg border text-center flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-blue-500/20 border-blue-400 text-white shadow-sm'
                         : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <span className="text-xl">{club.badge}</span>
-                    <span className={`text-[11px] font-black truncate w-full ${isSelected ? 'text-blue-300' : 'text-slate-200'}`}>
+                    <ClubBadge club={club} className="w-5 h-5 sm:w-6 sm:h-6" textClassName="text-xl" />
+                    <span className={`text-[10px] sm:text-[11px] font-black truncate w-full ${isSelected ? 'text-blue-300' : 'text-slate-200'}`}>
                       {club.name}
                     </span>
-                    <span className="text-[9px] text-slate-500 truncate w-full">{club.city}</span>
+                    <span className="text-[8px] sm:text-[9px] text-slate-500 truncate w-full">{club.city}</span>
                   </button>
                 );
               })}

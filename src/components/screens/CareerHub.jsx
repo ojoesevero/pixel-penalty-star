@@ -1,12 +1,13 @@
 import React from 'react';
 import { formatCurrency } from '@/engine/rpgSystem';
+import ClubBadge from '@/components/common/ClubBadge';
 
 export default function CareerHub({
   player,
   currentClub,
   seasonIndex,
   gameInSeason,
-  totalGamesInSeason = 5,
+  totalGamesInSeason = 10,
   seasonGoals = 0,
   seasonAssists = 0,
   nextOpponent,
@@ -21,6 +22,12 @@ export default function CareerHub({
   const mediaHype = player.mediaHype || 40;
   const energy = player.energy || 100;
 
+  // Window status text
+  const windowStatus =
+    gameInSeason < 5
+      ? `❄️ Janela de Janeiro na Rodada 5 (${5 - gameInSeason} jogos)`
+      : `☀️ Janela de Julho / Europa na Rodada 10 (${10 - gameInSeason} jogos)`;
+
   return (
     <div className="flex flex-col gap-2.5 sm:gap-3 animate-fade-in">
       
@@ -29,10 +36,13 @@ export default function CareerHub({
         {/* Profile Card */}
         <div className="bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex items-center gap-3 shadow-md">
           <div 
-            className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-black shadow-inner border border-white/20 shrink-0"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-black shadow-inner border border-white/20 shrink-0 relative"
             style={{ backgroundColor: currentClub.colors?.primary || '#3b82f6', color: currentClub.colors?.text || '#fff' }}
           >
             #{player.number}
+            <div className="absolute -bottom-1 -right-1">
+              <ClubBadge club={currentClub} className="w-5 h-5 drop-shadow" textClassName="text-xs" />
+            </div>
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-sm sm:text-base font-black text-white truncate">{player.name}</h2>
@@ -47,10 +57,13 @@ export default function CareerHub({
         <div className="bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex flex-col justify-between shadow-md">
           <div className="flex justify-between items-center text-[10px]">
             <span className="text-slate-400 font-bold uppercase">Contrato Vigente</span>
-            <span className="text-emerald-400 font-bold">{currentClub.name}</span>
+            <span className="text-emerald-400 font-bold flex items-center gap-1">
+              <ClubBadge club={currentClub} className="w-3.5 h-3.5" textClassName="text-xs" />
+              {currentClub.name}
+            </span>
           </div>
           <div>
-            <p className="text-[9px] text-slate-400 uppercase font-semibold">Salário</p>
+            <p className="text-[9px] text-slate-400 uppercase font-semibold">Salário Mensal</p>
             <p className="text-sm sm:text-base font-black text-emerald-400 leading-tight">
               {formatCurrency(player.monthlySalary || 5000)} <span className="text-[10px] text-slate-400 font-normal">/ mês</span>
             </p>
@@ -64,7 +77,7 @@ export default function CareerHub({
         <div className="bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3 rounded-xl flex flex-col justify-between shadow-md">
           <div className="flex justify-between items-center text-[10px]">
             <span className="text-slate-400 font-bold uppercase">Temporada {seasonIndex + 1}</span>
-            <span className="text-amber-400 font-bold">Rodada {gameInSeason + 1} de {totalGamesInSeason}</span>
+            <span className="text-amber-400 font-bold">Mês {gameInSeason + 1} de {totalGamesInSeason}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center py-0.5">
             <div className="bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
@@ -76,6 +89,9 @@ export default function CareerHub({
               <p className="text-[8px] uppercase font-bold text-slate-400">Assistências</p>
             </div>
           </div>
+          <p className="text-[9px] text-amber-300/90 font-semibold truncate text-center">
+            {windowStatus}
+          </p>
         </div>
       </div>
 
@@ -158,12 +174,12 @@ export default function CareerHub({
       {nextOpponent && (
         <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 p-3 sm:p-4 rounded-xl border border-slate-800 flex flex-row items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-2xl shadow-md shrink-0">
-              {nextOpponent.badge}
+            <div className="w-11 h-11 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center justify-center shadow-md shrink-0">
+              <ClubBadge club={nextOpponent} className="w-8 h-8" textClassName="text-2xl" />
             </div>
             <div>
               <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 block">
-                Próximo Confronto • {currentClub.league}
+                Próximo Confronto • {nextOpponent.league}
               </span>
               <h3 className="text-xs sm:text-sm font-black text-white">
                 {currentClub.name} <span className="text-slate-500 font-normal">vs</span> {nextOpponent.name}
@@ -209,7 +225,7 @@ export default function CareerHub({
           </div>
         </button>
 
-        {/* Transfer Window (if available or manual check) */}
+        {/* Transfer Window */}
         <button
           onClick={onOpenTransfers}
           className={`p-2.5 rounded-xl border transition flex items-center gap-2.5 text-left cursor-pointer active:scale-[0.99] ${
@@ -224,7 +240,7 @@ export default function CareerHub({
               {transferOffersAvailable ? '🚨 PROPOSTAS NA MESA!' : 'Transferências'}
             </h4>
             <p className="text-[10px] text-slate-400">
-              {transferOffersAvailable ? 'China $800k vs Série A' : 'Negociar com clubes'}
+              {gameInSeason < 5 ? '❄️ Janela de Janeiro' : '☀️ Janela de Julho'}
             </p>
           </div>
         </button>

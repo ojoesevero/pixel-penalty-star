@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { resolveDuelOutcome } from '@/engine/tsubasaMatch';
 import { sfxKick, sfxGoal, sfxSave, sfxCrowd } from '@/audio/sfx';
+import ClubBadge from '@/components/common/ClubBadge';
 
 export default function TsubasaDuelModal({ duel, player, currentClub, opponentClub, onDuelComplete }) {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -71,10 +72,10 @@ export default function TsubasaDuelModal({ duel, player, currentClub, opponentCl
                 <p className="text-[9px] text-rose-400 font-medium truncate">{opponentClub.stadium}</p>
               </div>
               <div 
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-lg sm:text-xl shadow-md border border-white/20 shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shadow-md border border-white/20 shrink-0 overflow-hidden"
                 style={{ backgroundColor: opponentClub.colors?.primary || '#ef4444', color: opponentClub.colors?.text || '#fff' }}
               >
-                {opponentClub.badge}
+                <ClubBadge club={opponentClub} className="w-7 h-7" textClassName="text-xl" />
               </div>
             </div>
           </div>
