@@ -1,39 +1,72 @@
-import React from 'react';
-
-export default function NewMainMenu({ hasSavedGame, onNewGame, onContinue, onLeaderboard }) {
+export default function NewMainMenu({
+  hasSavedGame,
+  viewMode = 'pc',
+  onChangeViewMode,
+  onNewGame,
+  onContinue,
+  onLeaderboard,
+}) {
   return (
-    <div className="max-w-xl mx-auto w-full p-6 sm:p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl flex flex-col items-center text-center animate-fade-in my-auto">
+    <div className="max-w-xl mx-auto w-full p-4 sm:p-7 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col items-center text-center animate-fade-in my-auto">
       
       {/* Anime Crest Badge */}
-      <div className="relative mb-4">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 flex items-center justify-center text-4xl shadow-2xl shadow-amber-500/30 border-2 border-amber-300/40 transform -rotate-3 hover:rotate-0 transition-transform">
+      <div className="relative mb-3">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 flex items-center justify-center text-3xl sm:text-4xl shadow-2xl shadow-amber-500/30 border-2 border-amber-300/40 transform -rotate-3 hover:rotate-0 transition-transform">
           ⚽
         </div>
-        <div className="absolute -bottom-2 -right-2 bg-slate-950 border border-amber-500/50 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">
+        <div className="absolute -bottom-2 -right-2 bg-slate-950 border border-amber-500/50 text-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">
           RPG
         </div>
       </div>
 
       {/* Hero Title */}
-      <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-wider bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-md">
+      <h1 className="text-xl sm:text-3xl font-black uppercase tracking-wider bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-md">
         Rumo ao Estrelato
       </h1>
-      <p className="text-xs sm:text-sm text-slate-300 font-semibold tracking-wide uppercase mt-1 mb-6">
+      <p className="text-[11px] sm:text-xs text-slate-300 font-semibold tracking-wide uppercase mt-0.5 mb-4">
         Carreira de Futebol • Estilo Capitão Tsubasa
       </p>
 
+      {/* Layout Selection: PC vs Mobile */}
+      {onChangeViewMode && (
+        <div className="mb-5 w-full max-w-sm bg-slate-950/90 p-1.5 rounded-xl border border-slate-800 flex items-center justify-between gap-1 shadow-inner">
+          <button
+            type="button"
+            onClick={() => onChangeViewMode('pc')}
+            className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              viewMode === 'pc'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            💻 Modo PC (Wide)
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeViewMode('mobile')}
+            className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              viewMode === 'mobile'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📱 Mobile (Vertical)
+          </button>
+        </div>
+      )}
+
       {/* Feature Pills */}
-      <div className="flex flex-wrap justify-center gap-2 mb-8 text-[11px] font-medium text-slate-400">
-        <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800">
+      <div className="flex flex-wrap justify-center gap-1.5 mb-6 text-[10px] font-medium text-slate-400">
+        <span className="px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-800">
           🌱 Várzea & Série D
         </span>
-        <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800">
+        <span className="px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-800">
           ⚡ Duelos Anime
         </span>
-        <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800">
+        <span className="px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-800">
           💰 Salários Reais & Luvas
         </span>
-        <span className="px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800">
+        <span className="px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-800">
           🏆 Supabase Global
         </span>
       </div>

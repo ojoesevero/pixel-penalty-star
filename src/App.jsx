@@ -24,6 +24,13 @@ const TOTAL_GAMES_PER_SEASON = 5;
 
 export default function App() {
   const [screen, setScreen] = useState('menu');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('rumo_view_mode') || 'pc';
+    } catch {
+      return 'pc';
+    }
+  });
   const [player, setPlayer] = useState(null);
   const [currentClub, setCurrentClub] = useState(null);
   const [seasonIndex, setSeasonIndex] = useState(0);
@@ -37,6 +44,13 @@ export default function App() {
   const [transferOffers, setTransferOffers] = useState(null);
   const [highlightScore, setHighlightScore] = useState(null);
   const [hasSavedGame, setHasSavedGame] = useState(false);
+
+  const handleToggleViewMode = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('rumo_view_mode', mode);
+    } catch { /* ignore */ }
+  };
 
   // Check saved game on mount
   useEffect(() => {
@@ -302,6 +316,8 @@ export default function App() {
     <GameContainer
       player={player}
       currentClub={currentClub}
+      viewMode={viewMode}
+      onToggleViewMode={handleToggleViewMode}
       onRankingClick={() => setScreen('leaderboard')}
       onResetGame={() => {
         if (confirm('Deseja realmente voltar ao menu inicial? Seu progresso está salvo.')) {
@@ -313,6 +329,8 @@ export default function App() {
       {screen === 'menu' && (
         <NewMainMenu
           hasSavedGame={hasSavedGame}
+          viewMode={viewMode}
+          onChangeViewMode={handleToggleViewMode}
           onNewGame={() => setScreen('create')}
           onContinue={handleContinue}
           onLeaderboard={() => setScreen('leaderboard')}
