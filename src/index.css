@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* ============================================
+   RUMO AO ESTRELATO: PENALTY EDITION
+   Game Boy Color Theme & Design System
+   ============================================ */
+
+/* --- GBC Color Palette (Custom Properties) --- */
+@theme {
+  --color-gbc-black: #1a1c2c;
+  --color-gbc-dark: #333c57;
+  --color-gbc-navy: #29366f;
+  --color-gbc-blue: #3b5dc9;
+  --color-gbc-cyan: #41a6f6;
+  --color-gbc-teal: #38b764;
+  --color-gbc-green: #73ef61;
+  --color-gbc-lime: #a7f070;
+  --color-gbc-yellow: #ffcd75;
+  --color-gbc-orange: #f9a31b;
+  --color-gbc-red: #d95763;
+  --color-gbc-pink: #ef7d57;
+  --color-gbc-purple: #5d275d;
+  --color-gbc-magenta: #b13e53;
+  --color-gbc-white: #f4f4f4;
+  --color-gbc-gray: #94b0c2;
+  --color-gbc-light: #c7dcd0;
+
+  /* Semantic colors */
+  --color-field-green: #2d6b32;
+  --color-field-light: #3a8a42;
+  --color-field-dark: #1e4d23;
+  --color-goal-gold: #ffcd75;
+  --color-save-red: #d95763;
+  --color-menu-bg: #1a1c2c;
+  --color-menu-panel: #333c57;
+  --color-menu-border: #5d275d;
+  --color-menu-highlight: #f9a31b;
+  --color-hud-bg: #29366f;
+  --color-text-primary: #f4f4f4;
+  --color-text-secondary: #94b0c2;
+  --color-text-accent: #ffcd75;
+  --color-text-success: #73ef61;
+  --color-text-danger: #d95763;
+
+  /* Typography */
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-retro: 'VT323', monospace;
+
+  /* Spacing scale for pixel-perfect grid */
+  --spacing-gbc: 4px;
+}
+
+/* --- Global Reset & Base --- */
+* {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--color-gbc-black);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-retro);
+  color: var(--color-text-primary);
+  background-color: var(--color-gbc-black);
+  overflow: hidden;
+  min-height: 100dvh;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Scanline Overlay Effect --- */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+}
+
+/* --- CRT Screen Glow --- */
+.crt-glow {
+  box-shadow:
+    inset 0 0 60px rgba(59, 93, 201, 0.15),
+    0 0 20px rgba(59, 93, 201, 0.1);
+}
+
+/* --- Pixel Art Font Classes --- */
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: -0.5px;
+}
+
+.font-retro {
+  font-family: var(--font-retro);
+  letter-spacing: 0.5px;
+}
+
+/* --- Pixel Border Utilities --- */
+.pixel-border {
+  border: 3px solid var(--color-menu-border);
+  box-shadow:
+    inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.pixel-border-gold {
+  border: 3px solid var(--color-goal-gold);
+  box-shadow:
+    inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+    3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* --- Animations --- */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { text-shadow: 0 0 4px var(--color-goal-gold); }
+  50% { text-shadow: 0 0 12px var(--color-goal-gold), 0 0 24px var(--color-orange); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-3px, 2px); }
+  20% { transform: translate(3px, -2px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2px, -3px); }
+  50% { transform: translate(-3px, 1px); }
+  60% { transform: translate(3px, -1px); }
+  70% { transform: translate(-1px, 3px); }
+  80% { transform: translate(1px, -3px); }
+  90% { transform: translate(-2px, 2px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-blink {
+  animation: blink 0.8s step-end infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-screen-shake {
+  animation: screen-shake 0.4s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+/* --- Scrollbar (retro style) --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-gbc-black);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-menu-border);
+  border: 1px solid var(--color-gbc-black);
+}
