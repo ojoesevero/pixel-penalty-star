@@ -1,353 +1,411 @@
-/* ============================================
-   APP — Game Orchestrator
-   Routes between all screens and manages flow
-   ============================================ */
+/* ==========================================================================
+   RUMO AO ESTRELATO: FOOTBALL CAREER RPG
+   Captain Tsubasa Edition • 16-Bit Modern Web Engine
+   ========================================================================== */
 
-import React, { useState, useCallback } from 'react';
-import { useGameState } from '@/hooks/useGameState';
-import GBCFrame from '@/components/ui/GBCFrame';
-import HUD from '@/components/ui/HUD';
-import MainMenu from '@/components/screens/MainMenu';
-import CharacterCreate from '@/components/screens/CharacterCreate';
-import SeasonHub from '@/components/screens/SeasonHub';
-import PenaltyMatch from '@/components/screens/PenaltyMatch';
-import SeasonSummary from '@/components/screens/SeasonSummary';
-import TransferMarket from '@/components/screens/TransferMarket';
-import WorldCup from '@/components/screens/WorldCup';
-import TrainingMode from '@/components/screens/TrainingMode';
+import React, { useState, useEffect, useCallback } from 'react';
+import GameContainer from '@/components/layout/GameContainer';
+import NewMainMenu from '@/components/screens/NewMainMenu';
+import NewCharacterCreate from '@/components/screens/NewCharacterCreate';
+import CareerHub from '@/components/screens/CareerHub';
+import MatchScreen from '@/components/screens/MatchScreen';
+import LifestyleStore from '@/components/screens/LifestyleStore';
+import TransferOffersModal from '@/components/screens/TransferOffersModal';
+import StoryEventModal from '@/components/story/StoryEventModal';
+import NewRetirement from '@/components/screens/NewRetirement';
 import Leaderboard, { submitScore } from '@/components/screens/Leaderboard';
-import Retirement from '@/components/screens/Retirement';
-import PixelButton from '@/components/ui/PixelButton';
 
-import { GAMES_PER_SEASON, PENALTIES_PER_GAME } from '@/engine/constants';
-import {
-  getTransferOffers, isGameOver, isWorldCupYear,
-  canBeCalledUp, getCareerAverage,
-  isLeagueChampion, isTopScorer, isBallonDor, isRetired, getAge,
-} from '@/engine/career';
-import { checkAchievements } from '@/engine/achievements';
-import { sfxGameOver } from '@/audio/sfx';
+import { CLUBS, getClubById } from '@/engine/clubsData';
+import { generateTransferOffers } from '@/engine/transferMarket';
+import { getRandomStoryEvent } from '@/engine/storyEvents';
+
+const SAVE_KEY = 'rumo_ao_estrelato_career_save';
+const TOTAL_GAMES_PER_SEASON = 5;
 
 export default function App() {
-  const { state, actions, computed } = useGameState();
-  const [transferOffers, setTransferOffers] = useState([]);
-  const [seasonAwards, setSeasonAwards] = useState({});
-  const [newAchievements, setNewAchievements] = useState([]);
+  const [screen, setScreen] = useState('menu');
+  const [player, setPlayer] = useState(null);
+  const [currentClub, setCurrentClub] = useState(null);
+  const [seasonIndex, setSeasonIndex] = useState(0);
+  const [gameInSeason, setGameInSeason] = useState(0);
+  const [seasonGoals, setSeasonGoals] = useState(0);
+  const [seasonAssists, setSeasonAssists] = useState(0);
+  const [totalGoals, setTotalGoals] = useState(0);
+  const [totalAssists, setTotalAssists] = useState(0);
+  const [titlesWon, setTitlesWon] = useState(0);
+  const [activeStoryEvent, setActiveStoryEvent] = useState(null);
+  const [transferOffers, setTransferOffers] = useState(null);
   const [highlightScore, setHighlightScore] = useState(null);
+  const [hasSavedGame, setHasSavedGame] = useState(false);
 
-  // --- Screen: Character Creation Complete ---
-  const handleCreateComplete = useCallback(({ player, club }) => {
-    actions.setPlayer(player);
-    actions.setClub(club);
-    actions.setScreen('seasonHub');
-  }, [actions]);
-
-  // --- Screen: Penalty Result ---
-  const handlePenaltyResult = useCallback((isGoal) => {
-    actions.recordPenalty(isGoal);
-
-    // Check if the game (3 penalties) is over
-    const nextPenalty = state.currentPenalty + 1;
-    if (nextPenalty >= PENALTIES_PER_GAME) {
-      // Game finished — check if season is over
-      const nextGame = state.currentGame + 1;
-      if (nextGame >= GAMES_PER_SEASON) {
-        // Season finished — process end-of-season
-        setTimeout(() => processEndOfSeason(isGoal), 300);
-      } else {
-        actions.endGame();
+  // Check saved game on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        setHasSavedGame(true);
       }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Save game state
+  const saveGame = useCallback((overrideData = {}) => {
+    if (!player || !currentClub) return;
+    try {
+      const data = {
+        player,
+        currentClubId: currentClub.id,
+        seasonIndex,
+        gameInSeason,
+        seasonGoals,
+        seasonAssists,
+        totalGoals,
+        totalAssists,
+        titlesWon,
+        ...overrideData,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      setHasSavedGame(true);
+    } catch { /* ignore */ }
+  }, [player, currentClub, seasonIndex, gameInSeason, seasonGoals, seasonAssists, totalGoals, totalAssists, titlesWon]);
+
+  // Load saved game
+  const handleContinue = () => {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        setPlayer(data.player);
+        setCurrentClub(getClubById(data.currentClubId));
+        setSeasonIndex(data.seasonIndex || 0);
+        setGameInSeason(data.gameInSeason || 0);
+        setSeasonGoals(data.seasonGoals || 0);
+        setSeasonAssists(data.seasonAssists || 0);
+        setTotalGoals(data.totalGoals || 0);
+        setTotalAssists(data.totalAssists || 0);
+        setTitlesWon(data.titlesWon || 0);
+        setScreen('hub');
+      }
+    } catch (e) {
+      console.error('Falha ao carregar jogo salvo:', e);
     }
-  }, [state, actions]);
+  };
 
-  // --- Process End of Season ---
-  const processEndOfSeason = useCallback((lastPenaltyIsGoal) => {
-    const finalSeasonGoals = state.seasonGoals + (lastPenaltyIsGoal ? 1 : 0);
-    const finalTotalGoals = state.totalGoals + (lastPenaltyIsGoal ? 1 : 0);
+  // Start new career
+  const handleStartCareer = (newPlayer, startingClub) => {
+    setPlayer(newPlayer);
+    setCurrentClub(startingClub);
+    setSeasonIndex(0);
+    setGameInSeason(0);
+    setSeasonGoals(0);
+    setSeasonAssists(0);
+    setTotalGoals(0);
+    setTotalAssists(0);
+    setTitlesWon(0);
+    setScreen('hub');
 
-    // Check for Game Over
-    if (isGameOver(finalSeasonGoals)) {
-      sfxGameOver();
-      actions.endGame();
-      actions.endSeason();
-      actions.setScreen('gameOver');
-      return;
+    try {
+      localStorage.setItem(
+        SAVE_KEY,
+        JSON.stringify({
+          player: newPlayer,
+          currentClubId: startingClub.id,
+          seasonIndex: 0,
+          gameInSeason: 0,
+          seasonGoals: 0,
+          seasonAssists: 0,
+          totalGoals: 0,
+          totalAssists: 0,
+          titlesWon: 0,
+        })
+      );
+      setHasSavedGame(true);
+    } catch { /* ignore */ }
+  };
+
+  // Generate next opponent
+  const getNextOpponent = () => {
+    if (!currentClub) return CLUBS[1];
+    const sameLeague = CLUBS.filter((c) => c.league === currentClub.league && c.id !== currentClub.id);
+    if (sameLeague.length > 0) {
+      return sameLeague[gameInSeason % sameLeague.length];
     }
+    return CLUBS.find((c) => c.id !== currentClub.id) || CLUBS[0];
+  };
 
-    // Calculate awards
-    const champion = isLeagueChampion(finalSeasonGoals);
-    const topScorer = isTopScorer(finalSeasonGoals);
+  // Match finished
+  const handleMatchComplete = ({ playerGoals: g, playerAssists: a, won }) => {
+    const updatedGoals = seasonGoals + g;
+    const updatedAssists = seasonAssists + a;
+    const updatedTotalGoals = totalGoals + g;
+    const updatedTotalAssists = totalAssists + a;
 
-    // Check World Cup
-    const age = computed.age;
-    const isWCYear = isWorldCupYear(age);
-    const careerAvg = (finalTotalGoals / (state.seasonsPlayed + 1));
-    const calledUp = isWCYear && canBeCalledUp(state.currentClub.tier, careerAvg);
+    // Monthly match salary payout + goal bonuses
+    const matchPay = Math.round((player.monthlySalary || 5000) / 4);
+    const bonusPay = g * 1500 + a * 800;
+    const newBalance = (player.bankBalance || 0) + matchPay + bonusPay;
 
-    if (champion) actions.awardTitle();
-    if (topScorer) actions.awardTopScorer();
+    // Coach and fan morale changes
+    const coachDelta = won ? 6 : g > 0 ? 3 : -4;
+    const fanDelta = g > 0 ? 8 : won ? 4 : -5;
+    const newCoachTrust = Math.min(100, Math.max(10, (player.coachTrust || 70) + coachDelta));
+    const newFanLove = Math.min(100, Math.max(10, (player.fanLove || 65) + fanDelta));
+    const newMediaHype = Math.min(100, Math.max(10, (player.mediaHype || 40) + g * 5));
 
-    // Store awards for summary screen
-    setSeasonAwards({
-      champion,
-      topScorer,
-      ballonDor: false, // Checked after WC
-      wonWorldCup: false,
-      calledUp,
-      isWCYear,
-    });
-
-    // Check achievements
-    const stats = {
-      totalGoals: finalTotalGoals,
-      bestGameGoals: Math.max(state.bestGameGoals, state.gameGoals + (lastPenaltyIsGoal ? 1 : 0)),
-      bestSeasonGoals: Math.max(state.bestSeasonGoals, finalSeasonGoals),
-      topScorerAwards: state.topScorerAwards + (topScorer ? 1 : 0),
-      ballonDors: state.ballonDors,
-      worldCups: state.worldCups,
-      calledUp: state.calledUp || calledUp,
-      seasonsPlayed: state.seasonsPlayed + 1,
-      perfectGameVsTier4: state.perfectGameVsTier4,
-      countriesPlayed: state.countriesPlayed,
+    const updatedPlayer = {
+      ...player,
+      bankBalance: newBalance,
+      coachTrust: newCoachTrust,
+      fanLove: newFanLove,
+      mediaHype: newMediaHype,
+      energy: Math.max(30, (player.energy || 100) - 20),
     };
-    const newAch = checkAchievements(stats, state.achievements);
-    if (newAch.length > 0) {
-      actions.unlockAchievements(newAch.map(a => a.id));
+
+    setPlayer(updatedPlayer);
+    setSeasonGoals(updatedGoals);
+    setSeasonAssists(updatedAssists);
+    setTotalGoals(updatedTotalGoals);
+    setTotalAssists(updatedTotalAssists);
+
+    const nextGame = gameInSeason + 1;
+
+    // Check if season is finished
+    if (nextGame >= TOTAL_GAMES_PER_SEASON) {
+      // Season End!
+      const isChampion = updatedGoals >= 6;
+      const newTitles = titlesWon + (isChampion ? 1 : 0);
+      setTitlesWon(newTitles);
+
+      // Advance age (1 season = 2 years)
+      const nextAge = updatedPlayer.age + 2;
+      const agedPlayer = { ...updatedPlayer, age: nextAge, energy: 100 };
+      setPlayer(agedPlayer);
+
+      // Check retirement at 36
+      if (nextAge >= 36) {
+        const finalScore = updatedTotalGoals * 15 + newTitles * 80 + Math.floor(newBalance / 50000);
+        submitScore({
+          playerName: agedPlayer.name,
+          score: finalScore,
+          goals: updatedTotalGoals,
+          titles: newTitles,
+          nationality: '🇧🇷',
+        });
+        setHighlightScore(finalScore);
+        setScreen('retirement');
+        return;
+      }
+
+      // Generate Transfer Window Offers! (The core immersion: China $800k vs Série A $75k)
+      const offers = generateTransferOffers(
+        currentClub,
+        agedPlayer.stats,
+        updatedGoals,
+        agedPlayer.monthlySalary
+      );
+      setTransferOffers(offers);
+
+      // Reset season counters
+      setSeasonIndex((s) => s + 1);
+      setGameInSeason(0);
+      setSeasonGoals(0);
+      setSeasonAssists(0);
+
+      setScreen('transfers');
+    } else {
+      setGameInSeason(nextGame);
+      setScreen('hub');
     }
-    setNewAchievements(newAch);
 
-    actions.endGame();
-    actions.endSeason();
+    saveGame();
+  };
 
-    // If World Cup year and called up, go to WC before summary
-    if (calledUp) {
-      actions.startWorldCup();
-    }
-  }, [state, computed, actions]);
+  // Accept a contract proposal
+  const handleAcceptTransfer = (offer) => {
+    const updatedHistory = [
+      ...(player.careerHistory || []),
+      {
+        clubId: offer.club.id,
+        clubName: offer.club.name,
+        age: player.age,
+        league: offer.club.league,
+      },
+    ];
 
-  // --- World Cup Result ---
-  const handleWorldCupResult = useCallback((phase, goals, won) => {
-    actions.worldCupResult({ phase, goals, won });
+    const updatedPlayer = {
+      ...player,
+      monthlySalary: offer.salary,
+      bankBalance: (player.bankBalance || 0) + (offer.signingBonus || 0),
+      careerHistory: updatedHistory,
+      coachTrust: 75,
+      fanLove: 70,
+    };
 
-    if (phase === 'semi' && won) {
-      // Proceed to final — screen stays on worldCup with phase='final'
-      return;
-    }
+    setPlayer(updatedPlayer);
+    setCurrentClub(offer.club);
+    setTransferOffers(null);
+    setScreen('hub');
 
-    // Tournament over (won final or eliminated)
-    const wonWC = phase === 'final' && won;
-
-    // Check Ballon d'Or (9 season goals + WC win)
-    const ballonDor = isBallonDor(state.seasonGoals, state.currentClub.tier, wonWC);
-    if (ballonDor) actions.awardBallonDor();
-
-    setSeasonAwards(prev => ({
-      ...prev,
-      wonWorldCup: wonWC,
-      ballonDor,
-    }));
-
-    actions.setScreen('seasonSummary');
-  }, [state, actions]);
-
-  // --- Season Summary Continue ---
-  const handleSeasonSummaryContinue = useCallback(() => {
-    // Check if retired
-    if (isRetired(state.seasonIndex + 1)) {
-      actions.setScreen('retirement');
-      return;
-    }
-
-    // Generate transfer offers
-    const offers = getTransferOffers(state.seasonGoals || state.bestSeasonGoals, state.currentClub);
-    if (offers.length === 0) {
-      // No offers = game over (shouldn't happen if season goals >= 2)
-      actions.setScreen('gameOver');
-      return;
-    }
-    setTransferOffers(offers);
-    actions.setScreen('transfer');
-  }, [state, actions]);
-
-  // --- Transfer Accept ---
-  const handleTransferAccept = useCallback((club) => {
-    actions.setClub(club);
-    actions.advanceSeason();
-    actions.setScreen('seasonHub');
-  }, [actions]);
-
-  // --- Retirement / Leaderboard ---
-  const handleRetirementLeaderboard = useCallback((score) => {
-    submitScore({
-      playerName: state.player.name,
-      score,
-      titles: state.titles,
-      topScorerAwards: state.topScorerAwards,
-      ballonDors: state.ballonDors,
-      worldCups: state.worldCups,
-      goals: state.totalGoals,
-      achievements: state.achievements.length,
-      nationality: state.player?.nationality || '🇧🇷',
+    saveGame({
+      player: updatedPlayer,
+      currentClubId: offer.club.id,
     });
-    setHighlightScore(score);
-    actions.setScreen('leaderboard');
-  }, [state, actions]);
+  };
 
-  // --- Determine if HUD should show ---
-  const showHUD = !['menu', 'create', 'training', 'leaderboard', 'gameOver'].includes(state.screen);
+  // Lifestyle item purchase
+  const handleBuyLifestyleItem = (item) => {
+    const newBalance = player.bankBalance - item.cost;
+    const newOwned = [...(player.lifestyleItems || []), item.id];
+
+    // Apply stat boosts if any
+    const updatedStats = { ...player.stats };
+    if (item.statBoost) {
+      Object.keys(item.statBoost).forEach((statKey) => {
+        updatedStats[statKey] = (updatedStats[statKey] || 50) + item.statBoost[statKey];
+      });
+    }
+
+    const updatedPlayer = {
+      ...player,
+      bankBalance: newBalance,
+      lifestyleItems: newOwned,
+      stats: updatedStats,
+    };
+
+    setPlayer(updatedPlayer);
+    saveGame({ player: updatedPlayer });
+  };
+
+  // Story event resolution
+  const handleResolveStoryEvent = (chosenOption) => {
+    const effects = chosenOption.effects || {};
+    const updatedPlayer = {
+      ...player,
+      energy: Math.min(100, Math.max(10, (player.energy || 100) + (effects.energy || 0))),
+      coachTrust: Math.min(100, Math.max(10, (player.coachTrust || 70) + (effects.coachTrust || 0))),
+      fanLove: Math.min(100, Math.max(10, (player.fanLove || 65) + (effects.fanLove || 0))),
+      mediaHype: Math.min(100, Math.max(10, (player.mediaHype || 40) + (effects.mediaHype || 0))),
+      bankBalance: Math.max(0, (player.bankBalance || 0) + (effects.money || 0)),
+    };
+
+    setPlayer(updatedPlayer);
+    setActiveStoryEvent(null);
+    saveGame({ player: updatedPlayer });
+  };
+
+  const calculateFinalCareerScore = () => {
+    if (!player) return 0;
+    return totalGoals * 15 + titlesWon * 80 + Math.floor((player.bankBalance || 0) / 50000);
+  };
 
   return (
-    <GBCFrame>
-      <div className="flex flex-col h-full">
-        {/* HUD */}
-        {showHUD && state.currentClub && (
-          <HUD
-            age={computed.age}
-            club={state.currentClub}
-            careerAvg={computed.careerAvg}
-            titles={state.titles}
-            ballonDors={state.ballonDors}
-            worldCups={state.worldCups}
-          />
-        )}
+    <GameContainer
+      player={player}
+      currentClub={currentClub}
+      onRankingClick={() => setScreen('leaderboard')}
+      onResetGame={() => {
+        if (confirm('Deseja realmente voltar ao menu inicial? Seu progresso está salvo.')) {
+          setScreen('menu');
+        }
+      }}
+    >
+      {/* 1. Main Menu */}
+      {screen === 'menu' && (
+        <NewMainMenu
+          hasSavedGame={hasSavedGame}
+          onNewGame={() => setScreen('create')}
+          onContinue={handleContinue}
+          onLeaderboard={() => setScreen('leaderboard')}
+        />
+      )}
 
-        {/* Screen Router */}
-        <div className="flex-1 overflow-y-auto">
-          {state.screen === 'menu' && (
-            <MainMenu
-              hasSave={state.hasSave}
-              onNewGame={actions.newGame}
-              onContinue={actions.loadSave}
-              onTraining={() => actions.setScreen('training')}
-              onLeaderboard={() => { setHighlightScore(null); actions.setScreen('leaderboard'); }}
-            />
-          )}
+      {/* 2. Character Creation */}
+      {screen === 'create' && (
+        <NewCharacterCreate onStartCareer={handleStartCareer} />
+      )}
 
-          {state.screen === 'create' && (
-            <CharacterCreate
-              onComplete={handleCreateComplete}
-              onBack={() => actions.setScreen('menu')}
-            />
-          )}
+      {/* 3. Career Hub */}
+      {screen === 'hub' && player && currentClub && (
+        <CareerHub
+          player={player}
+          currentClub={currentClub}
+          seasonIndex={seasonIndex}
+          gameInSeason={gameInSeason}
+          totalGamesInSeason={TOTAL_GAMES_PER_SEASON}
+          seasonGoals={seasonGoals}
+          seasonAssists={seasonAssists}
+          nextOpponent={getNextOpponent()}
+          transferOffersAvailable={Boolean(transferOffers)}
+          onStartMatch={() => setScreen('match')}
+          onOpenStore={() => setScreen('store')}
+          onTriggerEvent={() => setActiveStoryEvent(getRandomStoryEvent())}
+          onOpenTransfers={() => {
+            if (!transferOffers) {
+              const offers = generateTransferOffers(currentClub, player.stats, seasonGoals, player.monthlySalary);
+              setTransferOffers(offers);
+            }
+            setScreen('transfers');
+          }}
+        />
+      )}
 
-          {state.screen === 'seasonHub' && state.currentClub && (
-            <SeasonHub
-              age={computed.age}
-              club={state.currentClub}
-              seasonIndex={state.seasonIndex}
-              currentGame={state.currentGame}
-              seasonGoals={state.seasonGoals}
-              onStartMatch={() => {
-                if (state.currentGame >= GAMES_PER_SEASON) {
-                  // Season already complete, go to summary
-                  processEndOfSeason(false);
-                } else {
-                  actions.startMatch();
-                }
-              }}
-              onExitToMenu={() => actions.setScreen('menu')}
-            />
-          )}
+      {/* 4. Match Screen (Captain Tsubasa Duel Mode) */}
+      {screen === 'match' && player && currentClub && (
+        <MatchScreen
+          player={player}
+          currentClub={currentClub}
+          opponentClub={getNextOpponent()}
+          onMatchComplete={handleMatchComplete}
+        />
+      )}
 
-          {state.screen === 'match' && state.currentClub && state.player && (
-            <PenaltyMatch
-              penaltyIndex={state.currentPenalty}
-              playerAttributes={state.player.attributes}
-              clubTier={state.currentClub.tier}
-              clubColors={state.currentClub.colors}
-              playerSkinColor={state.player.skinColor}
-              playerNumber={state.player.number}
-              onResult={handlePenaltyResult}
-            />
-          )}
+      {/* 5. Lifestyle Store */}
+      {screen === 'store' && player && (
+        <LifestyleStore
+          player={player}
+          onBuyItem={handleBuyLifestyleItem}
+          onBack={() => setScreen('hub')}
+        />
+      )}
 
-          {state.screen === 'seasonSummary' && (
-            <SeasonSummary
-              seasonIndex={state.seasonIndex}
-              seasonGoals={state.bestSeasonGoals}
-              isChampion={seasonAwards.champion}
-              isTopScorer={seasonAwards.topScorer}
-              isBallonDor={seasonAwards.ballonDor}
-              wonWorldCup={seasonAwards.wonWorldCup}
-              newAchievements={newAchievements}
-              onContinue={handleSeasonSummaryContinue}
-            />
-          )}
+      {/* 6. Transfer Offers Modal */}
+      {screen === 'transfers' && transferOffers && player && (
+        <TransferOffersModal
+          offers={transferOffers}
+          player={player}
+          onAcceptOffer={handleAcceptTransfer}
+        />
+      )}
 
-          {state.screen === 'transfer' && (
-            <TransferMarket
-              offers={transferOffers}
-              currentClub={state.currentClub}
-              seasonGoals={state.bestSeasonGoals}
-              onAccept={handleTransferAccept}
-            />
-          )}
+      {/* 7. Story Event Dilemma Modal */}
+      {activeStoryEvent && (
+        <StoryEventModal
+          event={activeStoryEvent}
+          onResolveEvent={handleResolveStoryEvent}
+        />
+      )}
 
-          {state.screen === 'worldCup' && state.player && (
-            <WorldCup
-              phase={state.worldCupPhase}
-              playerAttributes={state.player.attributes}
-              playerSkinColor={state.player.skinColor}
-              playerNumber={state.player.number}
-              onResult={handleWorldCupResult}
-            />
-          )}
+      {/* 8. Retirement / End of Career */}
+      {screen === 'retirement' && player && (
+        <NewRetirement
+          player={player}
+          totalGoals={totalGoals}
+          totalAssists={totalAssists}
+          titles={titlesWon}
+          seasonsPlayed={seasonIndex + 1}
+          finalScore={calculateFinalCareerScore()}
+          onViewLeaderboard={() => setScreen('leaderboard')}
+          onRestart={() => setScreen('menu')}
+        />
+      )}
 
-          {state.screen === 'training' && (
-            <TrainingMode onExit={() => actions.setScreen('menu')} />
-          )}
-
-          {state.screen === 'leaderboard' && (
-            <Leaderboard
-              onBack={() => actions.setScreen('menu')}
-              highlightScore={highlightScore}
-            />
-          )}
-
-          {state.screen === 'retirement' && state.player && (
-            <Retirement
-              player={state.player}
-              totalGoals={state.totalGoals}
-              titles={state.titles}
-              topScorerAwards={state.topScorerAwards}
-              ballonDors={state.ballonDors}
-              worldCups={state.worldCups}
-              seasonsPlayed={state.seasonsPlayed}
-              achievements={state.achievements}
-              clubHistory={state.clubHistory}
-              onLeaderboard={handleRetirementLeaderboard}
-              onNewGame={() => { actions.deleteSave(); actions.newGame(); }}
-            />
-          )}
-
-          {state.screen === 'gameOver' && (
-            <div className="p-6 flex flex-col items-center justify-center min-h-full animate-fade-in">
-              <div className="text-4xl mb-4">💀</div>
-              <h2 className="font-pixel text-[12px] text-gbc-red mb-2">GAME OVER</h2>
-              <p className="font-retro text-lg text-gbc-gray text-center mb-1">
-                Nenhum clube quis renovar seu contrato.
-              </p>
-              <p className="font-retro text-sm text-gbc-dark text-center mb-6">
-                Sua carreira chegou ao fim prematuramente.
-              </p>
-
-              <div className="bg-gbc-black/50 border border-gbc-navy p-3 w-full max-w-[250px] mb-6 text-center">
-                <p className="font-pixel text-[7px] text-gbc-gray">GOLS NA CARREIRA</p>
-                <span className="font-pixel text-[20px] text-gbc-red">{state.totalGoals}</span>
-              </div>
-
-              <div className="space-y-2 w-full max-w-[250px]">
-                <PixelButton onClick={() => { actions.deleteSave(); actions.newGame(); }} variant="primary" fullWidth>
-                  🎮 TENTAR NOVAMENTE
-                </PixelButton>
-                <PixelButton onClick={() => actions.setScreen('menu')} variant="ghost" fullWidth>
-                  ◀ MENU
-                </PixelButton>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </GBCFrame>
+      {/* 9. Hall da Fama / Leaderboard */}
+      {screen === 'leaderboard' && (
+        <Leaderboard
+          onBack={() => setScreen(player ? 'hub' : 'menu')}
+          highlightScore={highlightScore}
+        />
+      )}
+    </GameContainer>
   );
 }

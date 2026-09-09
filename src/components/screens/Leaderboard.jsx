@@ -1,10 +1,9 @@
-/* ============================================
-   LEADERBOARD
-   Ranking with Supabase Global & Local modes
-   ============================================ */
+/* ==========================================================================
+   HALL DA FAMA (LEADERBOARD)
+   Global Supabase & Local records with 16-bit modern polish
+   ========================================================================== */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import PixelButton from '@/components/ui/PixelButton';
 import {
   fetchGlobalLeaderboard,
   submitGlobalScore,
@@ -13,9 +12,6 @@ import {
 
 const LEADERBOARD_KEY = 'penalty_star_leaderboard';
 
-/**
- * Get leaderboard from localStorage
- */
 export function getLeaderboard() {
   try {
     const data = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || '[]');
@@ -25,11 +21,7 @@ export function getLeaderboard() {
   }
 }
 
-/**
- * Submit a score to both local storage and Supabase (if configured)
- */
 export async function submitScore(entry) {
-  // 1. Always save locally
   try {
     const data = getLeaderboard();
     data.push({
@@ -38,11 +30,8 @@ export async function submitScore(entry) {
     });
     data.sort((a, b) => b.score - a.score);
     localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(data.slice(0, 50)));
-  } catch {
-    /* ignore local error */
-  }
+  } catch { /* ignore */ }
 
-  // 2. Submit to Supabase if configured
   if (isSupabaseConfigured()) {
     try {
       await submitGlobalScore(entry);
@@ -59,12 +48,10 @@ export default function Leaderboard({ onBack, highlightScore }) {
   const [loadingGlobal, setLoadingGlobal] = useState(false);
   const [globalError, setGlobalError] = useState(null);
 
-  // Load local leaderboard
   const loadLocal = useCallback(() => {
     setLocalEntries(getLeaderboard());
   }, []);
 
-  // Load global leaderboard
   const loadGlobal = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
     setLoadingGlobal(true);
@@ -88,145 +75,139 @@ export default function Leaderboard({ onBack, highlightScore }) {
   const activeEntries = tab === 'global' ? globalEntries : localEntries;
 
   return (
-    <div className="p-4 animate-slide-up">
+    <div className="max-w-2xl mx-auto w-full p-4 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl animate-fade-in flex flex-col gap-4">
       {/* Title */}
-      <div className="text-center mb-3">
-        <h2 className="font-pixel text-[10px] text-gbc-yellow">🏆 HALL DA FAMA</h2>
-        <div className="mt-1 w-24 h-[2px] bg-gbc-purple mx-auto" />
+      <div className="text-center">
+        <h2 className="text-lg sm:text-xl font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-2">
+          <span>🏆</span> HALL DA FAMA MUNDIAL
+        </h2>
+        <p className="text-xs text-slate-400 mt-0.5">
+          As maiores carreiras e lendas do futebol consagradas na história.
+        </p>
       </div>
 
-      {/* Mode Tabs */}
-      <div className="flex gap-2 mb-3">
+      {/* Tabs */}
+      <div className="flex gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
         <button
-          type="button"
           onClick={() => {
             setTab('global');
-            if (isSupabaseConfigured() && globalEntries.length === 0) {
-              loadGlobal();
-            }
+            if (isSupabaseConfigured() && globalEntries.length === 0) loadGlobal();
           }}
-          className={`flex-1 py-1.5 font-pixel text-[7px] text-center border transition-all ${
+          className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer ${
             tab === 'global'
-              ? 'border-gbc-yellow bg-gbc-yellow/20 text-gbc-yellow'
-              : 'border-gbc-navy bg-gbc-black/40 text-gbc-gray hover:text-gbc-white'
+              ? 'bg-amber-500 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          🌐 GLOBAL (SUPABASE)
+          🌐 Global (Supabase)
         </button>
         <button
-          type="button"
           onClick={() => {
             setTab('local');
             loadLocal();
           }}
-          className={`flex-1 py-1.5 font-pixel text-[7px] text-center border transition-all ${
+          className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer ${
             tab === 'local'
-              ? 'border-gbc-yellow bg-gbc-yellow/20 text-gbc-yellow'
-              : 'border-gbc-navy bg-gbc-black/40 text-gbc-gray hover:text-gbc-white'
+              ? 'bg-amber-500 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
-          💾 MEUS RECORDES
+          💾 Meus Recordes
         </button>
       </div>
 
-      {/* Global Tab Content - Supabase Not Configured */}
+      {/* Supabase unconfigured notice */}
       {tab === 'global' && !isSupabaseConfigured() && (
-        <div className="bg-gbc-navy/30 border border-gbc-navy p-3 text-center my-4 rounded-none">
-          <span className="text-2xl mb-1 block">☁️</span>
-          <p className="font-pixel text-[7px] text-gbc-yellow mb-2">SUPABASE NÃO CONFIGURADO</p>
-          <p className="font-retro text-sm text-gbc-gray leading-tight mb-3">
-            Para ativar o Ranking Global com outros jogadores, crie seu projeto no Supabase e configure as variáveis no arquivo <code className="text-gbc-cyan">.env</code>:
+        <div className="bg-slate-950 p-4 rounded-xl border border-amber-500/30 text-center space-y-2">
+          <p className="text-xs font-bold text-amber-400">SUPABASE NÃO CONFIGURADO</p>
+          <p className="text-xs text-slate-300">
+            Adicione <code className="text-cyan-400">VITE_SUPABASE_URL</code> e <code className="text-cyan-400">VITE_SUPABASE_ANON_KEY</code> no arquivo <code className="text-amber-300">.env</code> para conectar ao Ranking Global!
           </p>
-          <div className="bg-gbc-black/70 p-2 font-mono text-[10px] text-left text-gbc-green border border-gbc-navy/60 select-all mb-3 overflow-x-auto">
-            VITE_SUPABASE_URL=...<br />
-            VITE_SUPABASE_ANON_KEY=...
-          </div>
-          <p className="font-retro text-xs text-gbc-dark mb-3">
-            Veja o arquivo <code className="text-gbc-yellow">supabase_schema.sql</code> para criar a tabela com 1 clique!
-          </p>
-          <PixelButton onClick={() => setTab('local')} variant="secondary" fullWidth>
-            VER RANKING LOCAL
-          </PixelButton>
+          <button
+            onClick={() => setTab('local')}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition"
+          >
+            Ver Meus Recordes Locais
+          </button>
         </div>
       )}
 
-      {/* Global Tab - Loading State */}
+      {/* Loading state */}
       {tab === 'global' && isSupabaseConfigured() && loadingGlobal && (
-        <div className="text-center py-8">
-          <div className="font-pixel text-[8px] text-gbc-cyan animate-pulse">
-            CARREGANDO RANKING...
+        <div className="text-center py-12">
+          <div className="text-xs font-black tracking-widest text-cyan-400 animate-pulse uppercase">
+            Sincronizando com o Supabase Cloud...
           </div>
         </div>
       )}
 
-      {/* Global Tab - Error State */}
+      {/* Error state */}
       {tab === 'global' && isSupabaseConfigured() && !loadingGlobal && globalError && (
-        <div className="bg-gbc-red/20 border border-gbc-red p-3 text-center my-3">
-          <p className="font-pixel text-[7px] text-gbc-red mb-1">ERRO DE CONEXÃO</p>
-          <p className="font-retro text-xs text-gbc-gray mb-2">{globalError}</p>
-          <PixelButton onClick={loadGlobal} variant="primary" size="sm">
-            TENTAR NOVAMENTE
-          </PixelButton>
+        <div className="bg-rose-950/40 border border-rose-500/40 p-4 rounded-xl text-center space-y-2">
+          <p className="text-xs font-bold text-rose-400 uppercase">Falha na conexão</p>
+          <p className="text-xs text-slate-300">{globalError}</p>
+          <button
+            onClick={loadGlobal}
+            className="px-4 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold cursor-pointer"
+          >
+            Tentar Novamente
+          </button>
         </div>
       )}
 
-      {/* Records Table */}
+      {/* Table list */}
       {(!loadingGlobal || tab === 'local') &&
         !(tab === 'global' && !isSupabaseConfigured()) &&
         !globalError && (
           <>
             {activeEntries.length === 0 ? (
-              <div className="text-center py-8">
-                <span className="text-3xl">📭</span>
-                <p className="font-retro text-lg text-gbc-gray mt-3">
-                  Nenhum score registrado ainda.
-                </p>
-                <p className="font-retro text-sm text-gbc-dark mt-1">
-                  Complete uma carreira para aparecer aqui!
+              <div className="text-center py-10">
+                <span className="text-3xl block mb-2">📭</span>
+                <p className="text-sm font-bold text-slate-300">Nenhuma carreira registrada ainda.</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Complete uma carreira para cravar seu nome na história!
                 </p>
               </div>
             ) : (
-              <div className="space-y-1 mb-4 max-h-[300px] overflow-y-auto pr-1">
-                {/* Header */}
-                <div className="flex items-center gap-2 px-2 py-1 border-b border-gbc-navy sticky top-0 bg-gbc-black z-10">
-                  <span className="font-pixel text-[6px] text-gbc-gray w-6">#</span>
-                  <span className="font-pixel text-[6px] text-gbc-gray flex-1">NOME</span>
-                  <span className="font-pixel text-[6px] text-gbc-gray w-12 text-right">SCORE</span>
-                  <span className="font-pixel text-[6px] text-gbc-gray w-8 text-center" title="Títulos">🏆</span>
-                  <span className="font-pixel text-[6px] text-gbc-gray w-8 text-center" title="Copas do Mundo">🌍</span>
-                </div>
-
+              <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
                 {activeEntries.map((entry, i) => {
                   const isHighlight = highlightScore && entry.score === highlightScore;
-                  const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+                  const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
 
                   return (
                     <div
                       key={entry.id || i}
-                      className={`flex items-center gap-2 px-2 py-1.5 border-b border-gbc-black/30 
-                        ${isHighlight ? 'bg-gbc-yellow/10 border-gbc-yellow animate-pulse-glow' : ''}
-                        ${i < 3 ? 'bg-gbc-navy/20' : ''}`}
+                      className={`flex items-center justify-between p-3 rounded-xl border transition ${
+                        isHighlight
+                          ? 'bg-amber-500/20 border-amber-500 shadow-md shadow-amber-500/10'
+                          : i < 3
+                          ? 'bg-slate-950/80 border-slate-800'
+                          : 'bg-slate-950/40 border-slate-850'
+                      }`}
                     >
-                      <span className="font-pixel text-[7px] text-gbc-gray w-6">
-                        {medal || i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-pixel text-[7px] text-gbc-white truncate block">
-                          {entry.playerName}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-6 text-center font-black text-sm text-amber-400">
+                          {medal || `#${i + 1}`}
                         </span>
-                        {entry.date && (
-                          <span className="font-retro text-xs text-gbc-dark">{entry.date}</span>
-                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">
+                            {entry.playerName}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            {entry.date || 'Lenda do Futebol'} • {entry.nationality || '🇧🇷'}
+                          </p>
+                        </div>
                       </div>
-                      <span className="font-pixel text-[8px] text-gbc-yellow w-12 text-right">
-                        {entry.score}
-                      </span>
-                      <span className="font-pixel text-[6px] text-gbc-orange w-8 text-center">
-                        {entry.titles || 0}
-                      </span>
-                      <span className="font-pixel text-[6px] text-gbc-green w-8 text-center">
-                        {entry.worldCups || 0}
-                      </span>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-black text-amber-400">
+                          {entry.score} pts
+                        </span>
+                        <div className="flex items-center justify-end gap-2 text-[10px] text-slate-400">
+                          <span>⚽ {entry.goals || 0}</span>
+                          <span>🏆 {entry.titles || 0}</span>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
@@ -235,16 +216,22 @@ export default function Leaderboard({ onBack, highlightScore }) {
           </>
         )}
 
-      {/* Bottom Controls */}
-      <div className="space-y-2 mt-2">
+      {/* Footer buttons */}
+      <div className="flex gap-2 pt-2">
         {tab === 'global' && isSupabaseConfigured() && (
-          <PixelButton onClick={loadGlobal} variant="secondary" fullWidth>
-            🔄 ATUALIZAR
-          </PixelButton>
+          <button
+            onClick={loadGlobal}
+            className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+          >
+            🔄 Atualizar
+          </button>
         )}
-        <PixelButton onClick={onBack} variant="ghost" fullWidth>
-          ◀ VOLTAR
-        </PixelButton>
+        <button
+          onClick={onBack}
+          className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition cursor-pointer border border-slate-700"
+        >
+          ◀ Voltar
+        </button>
       </div>
     </div>
   );

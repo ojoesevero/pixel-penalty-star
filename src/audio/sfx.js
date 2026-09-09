@@ -185,6 +185,13 @@ export function sfxCrowd() {
   noise.start(ctx.currentTime);
 }
 
+/** Referee Whistle — high frequency piercing blast */
+export function sfxWhistle() {
+  if (isMuted()) return;
+  playTone(2800, 0.15, 'sine', 0.12);
+  setTimeout(() => playTone(3100, 0.25, 'sine', 0.1), 100);
+}
+
 /** Game Over — sad descending tones */
 export function sfxGameOver() {
   if (isMuted()) return;
