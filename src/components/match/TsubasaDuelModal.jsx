@@ -29,8 +29,8 @@ export default function TsubasaDuelModal({ duel, player, currentClub, opponentCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-xl max-h-[95vh] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-amber-500/80 rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.25)] flex flex-col overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[95vh] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-amber-500/80 rounded-xl shadow-[0_0_40px_rgba(245,158,11,0.25)] flex flex-col overflow-hidden my-auto">
         
         {/* Dynamic Anime Speed Lines Banner */}
         <div className="shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 py-1.5 px-3 text-center border-b border-amber-400/40">
@@ -89,42 +89,52 @@ export default function TsubasaDuelModal({ duel, player, currentClub, opponentCl
                 </p>
               </div>
 
-              {/* Action Decision Cards */}
-              <div className="flex flex-col gap-1.5 sm:gap-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Escolha o seu movimento (Capitão Tsubasa Style):
+              {/* Action Decision Cards — 3 KPI Square Buttons */}
+              <div className="flex flex-col gap-1.5 mt-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                  Escolha o seu comando de confronto:
                 </p>
 
-                {duel.options.map((option) => {
-                  const playerStat = player.stats?.[option.statRequired] || 50;
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => handleChooseAction(option)}
-                      className="group p-2 sm:p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 hover:border-amber-500/80 transition-all text-left flex items-center justify-between gap-2.5 cursor-pointer active:scale-[0.99] shadow-sm"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-300 transition">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  {duel.options.map((option) => {
+                    const playerStat = player.stats?.[option.statRequired] || 50;
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => handleChooseAction(option)}
+                        className="group flex flex-col justify-between items-center text-center p-2.5 sm:p-3 rounded-xl bg-gradient-to-b from-slate-800/95 to-slate-900 border-2 border-slate-700 hover:border-amber-400 hover:from-slate-750 hover:to-slate-850 transition-all cursor-pointer active:scale-95 shadow-lg hover:shadow-amber-500/20"
+                      >
+                        {/* Title & Energy Cost */}
+                        <div className="w-full flex flex-col items-center">
+                          <span className="text-xs sm:text-sm font-black text-white group-hover:text-amber-300 transition line-clamp-1 leading-tight">
                             {option.title}
                           </span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700">
-                            Gasta {option.energyCost}% Fôlego
+                          <span className="text-[9px] mt-1 px-2 py-0.5 rounded-full bg-slate-950/80 text-cyan-300 border border-slate-700 font-semibold">
+                            ⚡ -{option.energyCost}% Fôlego
                           </span>
                         </div>
-                        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
-                          {option.description}
-                        </p>
-                      </div>
 
-                      {/* Stat indicator badge */}
-                      <div className="text-right shrink-0 bg-slate-900/90 px-2 py-1 rounded-md border border-slate-700">
-                        <p className="text-[8px] text-slate-400 uppercase font-semibold">{option.statRequired}</p>
-                        <p className="text-xs sm:text-sm font-black text-amber-400">{playerStat}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+                        {/* Center KPI Box */}
+                        <div className="my-2 bg-slate-950/90 w-full py-1.5 px-1 rounded-lg border border-slate-800 group-hover:border-amber-500/50 transition">
+                          <p className="text-[8px] text-slate-400 uppercase font-bold tracking-wider">
+                            {option.statRequired}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-black text-amber-400 leading-none my-0.5">
+                            {playerStat}
+                          </p>
+                          <p className="text-[8px] text-slate-500">
+                            {playerStat >= 65 ? '⭐ Forte' : '⚡ Médio'}
+                          </p>
+                        </div>
+
+                        {/* Action CTA */}
+                        <span className="w-full py-1 rounded-md bg-amber-500/10 group-hover:bg-amber-500 text-amber-300 group-hover:text-slate-950 font-black text-[10px] uppercase tracking-wider transition">
+                          Executar ❯
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </>
           ) : (
