@@ -13,20 +13,20 @@ export default function GameContainer({
   const isMobileView = viewMode === 'mobile';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start py-1.5 sm:py-2.5 px-2 sm:px-3 font-sans selection:bg-amber-500 selection:text-black">
+    <div className="h-screen h-[100dvh] max-h-[100dvh] w-screen max-w-[100vw] overflow-hidden bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-1 sm:p-2 font-sans selection:bg-amber-500 selection:text-black">
       {/* Background Subtle Gradient & Glow */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 -z-10" />
 
       {/* Main Console Container */}
       <div
-        className={`bg-slate-900/95 transition-all duration-300 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col ${
+        className={`bg-slate-900/95 transition-all duration-300 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col flex-1 ${
           isMobileView
-            ? 'w-full max-w-[420px] rounded-3xl border-2 border-amber-500/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] my-auto min-h-[620px]'
-            : 'w-full max-w-5xl rounded-xl border border-slate-800/80'
+            ? 'w-full max-w-[410px] max-h-[96vh] rounded-3xl border-2 border-amber-500/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] my-auto'
+            : 'w-full max-w-5xl max-h-[96vh] rounded-xl border border-slate-800/80 my-auto'
         }`}
       >
         {/* Top Professional Header */}
-        <header className="bg-slate-950/90 border-b border-slate-800/80 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+        <header className="shrink-0 bg-slate-950/90 border-b border-slate-800/80 px-3 py-1.5 flex items-center justify-between gap-2">
           {/* Brand / Logo */}
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-base shadow-md shadow-amber-500/20">
@@ -117,13 +117,13 @@ export default function GameContainer({
         </header>
 
         {/* Content Viewport */}
-        <main className="flex-1 flex flex-col p-2 sm:p-3.5 overflow-y-auto">
+        <main className="flex-1 flex flex-col p-2 sm:p-2.5 overflow-y-auto justify-center">
           {children}
         </main>
       </div>
 
       {/* Footer Info */}
-      <footer className="mt-1.5 text-[10px] text-slate-500 text-center font-medium">
+      <footer className="shrink-0 py-0.5 text-[9px] sm:text-[10px] text-slate-500 text-center font-medium">
         Desenvolvido com paixão pelo futebol brasileiro • Supabase Global Sync • Vercel Cloud
       </footer>
     </div>
